@@ -22,33 +22,59 @@
 	<footer>&copy;footerauthority</footer>
 	<script type="text/javascript">
 
-	var game = new Phaser.Game(800, 600, Phaser.AUTO, "gameholder", { preload: preload, create: create, update: update });
+	const GAME_HEIGHT = 600;
+
+	var game = new Phaser.Game(800, GAME_HEIGHT, Phaser.AUTO, "gameholder", { preload: preload, create: create, update: update });
 
 
 
 	function preload() {
 
-    game.load.image("sky", "assets/sky.png");
+    game.load.image("sky", "assets/space1.png");
     game.load.image("ground", "assets/platform.png");
     game.load.image("star", "assets/star.png");
 		game.load.image("barrier", "assets/barrier.png");
+		game.load.image("red", "assets/barrier0.png");
+		game.load.image("orange", "assets/barrier1.png");
+		game.load.image("yellow", "assets/barrier2.png");
+		game.load.image("green", "assets/barrier3.png");
+		game.load.image("blue", "assets/barrier4.png");
+		game.load.image("purple", "assets/barrier5.png");
     game.load.spritesheet("dude", "assets/dude.png", 32, 48);
 
 	}
 
+	var numPlayers = 1
 	var player1;
 	var player1Stats = {
+		color: 0,
 		health: 3,
 		score: 0,
+		highScore: 0,
 		powerupsAvailable: 0,
 		powerupsUsed: 0
 	};
-	var numRandomBarriers;
+	var overallHighScore;
+	var numRandomBarriers = 10;
+	const barrierSpawnX = 780;
+	const barriersPerSpawn = 5;
+	var barrierSpawnStaggerFrames = 80;
+	class Barrier {
+		constructor (color, xPos, yPos)
+		{
+			this.color = color;
+			this.xPos = xPos;
+			this.yPos = yPos;
+		}
+	};
+	const barrierKillerX = -40;
 	var platforms;
 	// var score = 0;
 	var scoreText;
 	var healthText;
+	var frame = 0;
 	var isGameOver = false;
+	const COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
 	console.log(player1Stats.health);
 
 	function create() {
@@ -61,11 +87,14 @@
 		//  The platforms group contains the ground and the 2 ledges we can jump on
 		platforms = game.add.group();
 
+		ends = game.add.group();
+
 		//  We will enable physics for any object that is created in this group
 		platforms.enableBody = true;
 
+		ends.enableBody = true;
 
-		game.add.sprite(0, 0, "barrier");
+		// game.add.sprite(0, 0, "barrier");
 
 
 		// NOTE: bring back into the game for hyperspace modec
@@ -77,10 +106,6 @@
 		//
     // //  This stops it from falling away when you jump on it
     // ground.body.immovable = true;
-
-    //  Now let"s create two ledges
-    var ledge = platforms.create(400, 400, "ground");
-    ledge.body.immovable = true;
 
 		console.log("score: " + player1Stats.score);
 
@@ -108,6 +133,9 @@
 
 		cursors = game.input.keyboard.createCursorKeys();
 
+		keyDash = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+    // key1.onDown.add(addPhaserDude, this);
+
 		stars = game.add.group();
 
 		stars.enableBody = true;
@@ -128,14 +156,9 @@
         //  This just gives each star a slightly random bounce value
         star.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
-
-		for (var i = 0; i < numRandomBarriers; i++) {
-			var barrier = barriers.create(400, 0, "barrier");
-
-		}
 		console.log("score: " + player1Stats.score);
-		scoreText = game.add.text(150, 16, "score: " + player1Stats.score, { fontSize: "32px", fill: "#000" });
-		healthText = game.add.text(16, 16, "health: " + player1Stats.health, { fontSize: "32px", fill: "#000" });
+		scoreText = game.add.text(150, 16, "score: " + player1Stats.score, { fontSize: "32px", fill: "#fff" });
+		healthText = game.add.text(16, 16, "health: " + player1Stats.health, { fontSize: "32px", fill: "#fff" });
 	}
 
 	function update() {
@@ -149,64 +172,126 @@
 	    player1.body.velocity.x = 0;
 			player1.body.velocity.y = 0;
 
-	    if (cursors.left.isDown)
-	    {
+	    if (cursors.left.isDown) {
 	        //  Move to the left
-	        player1.body.velocity.x = -250;
-
-	        player1.animations.play("left");
-	    }
-	    else if (cursors.right.isDown)
-	    {
+					if (keyDash.isDown) {
+						player1.body.velocity.x = -350;
+					} else {
+						player1.body.velocity.x = -250;
+					}
+					player1.animations.play("left");
+	    } else if (cursors.right.isDown) {
 	        //  Move to the right
-	        player1.body.velocity.x = 250;
-
+					if (keyDash.isDown) {
+						player1.body.velocity.x = 350;
+					} else {
+						player1.body.velocity.x = 250;
+					}
 	        player1.animations.play("right");
-	    }
-	    else
-	    {
-	        //  Stand still
+	    } else {
+	        //  Stay still
 	        player1.animations.stop();
-
 	        player1.frame = 4;
 	    }
 
-	    //  Allow the player to jump if they are touching the ground.
 	    if (cursors.up.isDown) {
-	        player1.body.velocity.y = -250;
+				if (keyDash.isDown) {
+					player1.body.velocity.y = -350;
+				} else {
+					player1.body.velocity.y = -250;
+				}
 	    } else if (cursors.down.isDown) {
-	        player1.body.velocity.y = 250;
+				if (keyDash.isDown) {
+					player1.body.velocity.y = 350;
+				} else {
+					player1.body.velocity.y = 250;
+				}
 	    }
 
 			game.physics.arcade.collide(stars, platforms);
 
-			game.physics.arcade.overlap(player1, stars, collideBarrier, null, this);
+			game.physics.arcade.overlap(player1, stars, collideStars, null, this);
 
-			function collideBarrier (player1, star) {
+			function collideStars (player1, star) {
 
 		    // Removes the star from the screen
 		    star.kill();
-
-				// player.health = player.health - 1;
-				player1Stats.health--;
-				healthText.text = "health: " + player1Stats.health;
-
-				if (!player1Stats.health) {
-					//endGame
-					console.log("game is over");
-				}
 
 		    //  Add and update the score
 		    player1Stats.score += 10;
 		    scoreText.text = "Score: " + player1Stats.score;
 
 			}
+
+			game.physics.arcade.overlap(player1, barriers, collideBarriers, null, this);
+
+			function collideBarriers (player1, barrier) {
+				console.log(barrier.animations.sprite.key);
+				// console.log(barrier);
+				if (barrier.animations.sprite.key === COLORS[player1Stats.color]) {
+					console.log("no kill");
+				} else {
+					console.log("collision");
+
+					// Removes the star from the screen
+					barrier.kill();
+
+					// player.health = player.health - 1;
+					player1Stats.health--;
+					healthText.text = "health: " + player1Stats.health;
+
+					if (!player1Stats.health) {
+						//endGame
+						console.log("game is over");
+					}
+				}
+			}
+			frame++;
+
+			function switchGamePhases(currentGamePhase) {
+				
+			}
+
+			if (frame / (barrierSpawnStaggerFrames * 25)) {
+				switchGamePhases(currentGamePhase);
+			}
+
+			// creates barriers every so many frames
+			if (frame % barrierSpawnStaggerFrames === 0) {
+				player1Stats.score++;
+				scoreText.text = "Score: " + player1Stats.score;
+				// console.log(COLORS[player1Stats.color]);
+				var availableColors = COLORS;
+				function isNotPlayerColor(value) {
+				  return value !== COLORS[player1Stats.color];
+				}
+				var notPlayerColorArr = availableColors.filter(isNotPlayerColor);
+				// console.log(notPlayerColorArr);
+
+				var playerColorBarrierIndex = Math.round(Math.random() * (COLORS.length - (numPlayers + 1)));
+				console.log(playerColorBarrierIndex);
+				for (var i = 0; i < barriersPerSpawn; i++) {
+
+					if (i === playerColorBarrierIndex) {
+						console.log("i " + playerColorBarrierIndex + " color " + COLORS[player1Stats.color]);
+						var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (GAME_HEIGHT / barriersPerSpawn));
+						barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
+						barrier.body.gravity.x = -10;
+						barrier.body.velocity.x = -80;
+					// } else if (!isSameColorIn) {
+					// add in condition to ensure same color isn't chosen more than once.
+
+					} else {
+						var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
+						var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (GAME_HEIGHT / barriersPerSpawn));
+						barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
+						barrier.body.gravity.x = -10;
+						barrier.body.velocity.x = -80;
+					}
+				}
+			}
 		}
-
-
 	}
-
 	</script>
-
 </body>
 </html>
