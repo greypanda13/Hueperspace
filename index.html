@@ -34,14 +34,13 @@
     game.load.image("ground", "assets/platform.png");
     game.load.image("star", "assets/star.png");
 		game.load.image("barrier", "assets/barrier.png");
-		game.load.image("red", "assets/barrier0.png");
-		game.load.image("orange", "assets/barrier1.png");
-		game.load.image("yellow", "assets/barrier2.png");
-		game.load.image("green", "assets/barrier3.png");
-		game.load.image("blue", "assets/barrier4.png");
-		game.load.image("purple", "assets/barrier5.png");
-    game.load.spritesheet("dude", "assets/dude.png", 32, 48);
-
+		game.load.spritesheet("red", "assets/barrier0.png", 25, 120);
+		game.load.spritesheet("orange", "assets/barrier1.png", 25, 120);
+		game.load.spritesheet("yellow", "assets/barrier2.png", 25, 120);
+		game.load.spritesheet("green", "assets/barrier3.png", 25, 120);
+		game.load.spritesheet("blue", "assets/barrier4.png", 25, 120);
+		game.load.spritesheet("purple", "assets/barrier5.png", 25, 120);
+    game.load.spritesheet("dude", "assets/playerspritesall.png", 59, 29);
 	}
 
 	var numPlayers = 1
@@ -73,8 +72,10 @@
 	var scoreText;
 	var healthText;
 	var frame = 0;
+	var isFlickerPlaying = false;
 	var isGameOver = false;
 	const COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
+	const gamePhaseTitles = ["Open Space", "Hyperspace"];
 	console.log(player1Stats.health);
 
 	function create() {
@@ -120,16 +121,21 @@
 
 		console.log("score: " + player1Stats.score);
 
-    //  Player physics properties. Give the little guy a slight bounce.
-    player1.body.bounce.y = 0.2;
-    player1.body.gravity.y = 0;
+    //  Player physics properties.
     player1.body.collideWorldBounds = true;
 
 		console.log("score: " + player1Stats.score);
 
-    //  Our two animations, walking left and right.
-    player1.animations.add("left", [0, 1, 2, 3], 10, true);
-    player1.animations.add("right", [5, 6, 7, 8], 10, true);
+    // player movement animations
+		// player1.animations.add("lateral", [1, 2], 900, true);
+    player1.animations.add("lateral0", [1, 2], 900, true);
+		player1.animations.add("lateral1", [7, 8], 900, true);
+		player1.animations.add("lateral2", [13, 14], 900, true);
+		player1.animations.add("lateral3", [19, 20], 900, true);
+		player1.animations.add("lateral4", [25, 26], 900, true);
+		player1.animations.add("lateral5", [31, 32], 900, true);
+
+		player1.animations.add("flicker0", [3, 4, 5, 4, 3, 4, 5, 4, 3, 4, 5, 4, 3, 4, 5, 4, 3], 900, true);
 
 		cursors = game.input.keyboard.createCursorKeys();
 
@@ -144,18 +150,21 @@
 
 		barriers.enableBody = true;
 
-    //  Here we"ll create 12 of them evenly spaced apart
-    for (var i = 0; i < 12; i++)
-    {
-        //  Create a star inside of the "stars" group
-        var star = stars.create(i * 200, i * 30, "star");
 
-        //  Let gravity do its thing
-        star.body.gravity.y = 6;
 
-        //  This just gives each star a slightly random bounce value
-        star.body.bounce.y = 0.7 + Math.random() * 0.2;
-    }
+
+    // //  Here we"ll create 12 of them evenly spaced apart
+    // for (var i = 0; i < 12; i++)
+    // {
+    //     //  Create a star inside of the "stars" group
+    //     var star = stars.create(i * 200, i * 30, "star");
+		//
+    //     //  Let gravity do its thing
+    //     star.body.gravity.y = 6;
+		//
+    //     //  This just gives each star a slightly random bounce value
+    //     star.body.bounce.y = 0.7 + Math.random() * 0.2;
+    // }
 		console.log("score: " + player1Stats.score);
 		scoreText = game.add.text(150, 16, "score: " + player1Stats.score, { fontSize: "32px", fill: "#fff" });
 		healthText = game.add.text(16, 16, "health: " + player1Stats.health, { fontSize: "32px", fill: "#fff" });
@@ -163,50 +172,52 @@
 
 	function update() {
 		if (isGameOver) {
-
+			endGame();
 		} else {
-			//  Collide the player and the stars with the platforms
-	    var hitPlatform = game.physics.arcade.collide(player1, platforms);
 
+		} if (currentGamePhase === 0) {
 			//  Reset the players velocity (movement)
-	    player1.body.velocity.x = 0;
+			player1.body.velocity.x = 0;
 			player1.body.velocity.y = 0;
 
-	    if (cursors.left.isDown) {
-	        //  Move to the left
-					if (keyDash.isDown) {
-						player1.body.velocity.x = -350;
-					} else {
-						player1.body.velocity.x = -250;
-					}
-					player1.animations.play("left");
-	    } else if (cursors.right.isDown) {
-	        //  Move to the right
-					if (keyDash.isDown) {
-						player1.body.velocity.x = 350;
-					} else {
-						player1.body.velocity.x = 250;
-					}
-	        player1.animations.play("right");
-	    } else {
-	        //  Stay still
-	        player1.animations.stop();
-	        player1.frame = 4;
-	    }
+			if (cursors.left.isDown) {
+				//  Move to the left
+				if (keyDash.isDown) {
+					player1.body.velocity.x = -350;
+				} else {
+					player1.body.velocity.x = -250;
+				}
+				if (!isFlickerPlaying) {
+					player1.animations.play("lateral" + player1Stats.color);
+				}
+			} else if (cursors.right.isDown) {
+				//  Move to the right
+				if (keyDash.isDown) {
+					player1.body.velocity.x = 350;
+				} else {
+					player1.body.velocity.x = 250;
+				}
+				if (!isFlickerPlaying) {
+					player1.animations.play("lateral" + player1Stats.color);
+				}
+			} else {
+				//  Stay still
+				player1.frame = 0 + player1Stats.color * 6;
+			}
 
-	    if (cursors.up.isDown) {
+			if (cursors.up.isDown) {
 				if (keyDash.isDown) {
 					player1.body.velocity.y = -350;
 				} else {
 					player1.body.velocity.y = -250;
 				}
-	    } else if (cursors.down.isDown) {
+			} else if (cursors.down.isDown) {
 				if (keyDash.isDown) {
 					player1.body.velocity.y = 350;
 				} else {
 					player1.body.velocity.y = 250;
 				}
-	    }
+			}
 
 			game.physics.arcade.collide(stars, platforms);
 
@@ -214,24 +225,27 @@
 
 			function collideStars (player1, star) {
 
-		    // Removes the star from the screen
-		    star.kill();
+				// Removes the star from the screen
+				star.kill();
 
-		    //  Add and update the score
-		    player1Stats.score += 10;
-		    scoreText.text = "Score: " + player1Stats.score;
+				//  Add and update the score
+				player1Stats.score += 10;
+				scoreText.text = "Score: " + player1Stats.score;
 
 			}
 
 			game.physics.arcade.overlap(player1, barriers, collideBarriers, null, this);
 
 			function collideBarriers (player1, barrier) {
-				console.log(barrier.animations.sprite.key);
+				// console.log(barrier.animations.sprite.key);
 				// console.log(barrier);
 				if (barrier.animations.sprite.key === COLORS[player1Stats.color]) {
-					console.log("no kill");
+					// console.log("no kill");
+					barrier.animations.play("pass");
 				} else {
-					console.log("collision");
+					// console.log("collision");
+					// isFlickerPlaying = true;
+					player1.animations.play("flicker" + player1Stats.color);
 
 					// Removes the star from the screen
 					barrier.kill();
@@ -246,14 +260,10 @@
 					}
 				}
 			}
-			frame++;
 
-			function switchGamePhases(currentGamePhase) {
-				
-			}
 
 			if (frame / (barrierSpawnStaggerFrames * 25)) {
-				switchGamePhases(currentGamePhase);
+				// switchGamePhases(currentGamePhase);
 			}
 
 			// creates barriers every so many frames
@@ -263,7 +273,7 @@
 				// console.log(COLORS[player1Stats.color]);
 				var availableColors = COLORS;
 				function isNotPlayerColor(value) {
-				  return value !== COLORS[player1Stats.color];
+					return value !== COLORS[player1Stats.color];
 				}
 				var notPlayerColorArr = availableColors.filter(isNotPlayerColor);
 				// console.log(notPlayerColorArr);
@@ -278,8 +288,9 @@
 						barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
 						barrier.body.gravity.x = -10;
 						barrier.body.velocity.x = -80;
-					// } else if (!isSameColorIn) {
-					// add in condition to ensure same color isn't chosen more than once.
+						barrier.animations.add("pass", [1], 200, true);
+						// } else if (!isSameColorIn) {
+						// add in condition to ensure same color isn't chosen more than once.
 
 					} else {
 						var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
@@ -287,10 +298,23 @@
 						barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
 						barrier.body.gravity.x = -10;
 						barrier.body.velocity.x = -80;
+						barrier.animations.add("pass", [1], 2000, true);
 					}
 				}
 			}
+		} else if (currentGamePhase === 1) {
+
 		}
+		frame++;
+
+		function switchGamePhases(currentGamePhase) {
+			if (currentGamePhase < gamePhases.length - 1) {
+				currentGamePhase++;
+			} else {
+				currentGamePhase = 0;
+			}
+		}
+
 	}
 	</script>
 </body>
