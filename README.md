@@ -22,20 +22,20 @@ Unsolved problems:
 Time Management:
 
 ------Percent------
-05% planning
-30% basic function algorithm for barrier generation
-30% game modes creation, transition work
-30% visual/audio creation/adjustment
-05% fine tuning of mechanics
+-05% planning
+-30% basic function algorithm for barrier generation
+-30% game modes creation, transition work
+-30% visual/audio creation/adjustment
+-05% fine tuning of mechanics
 
 ----Hours----
-03/28:  2hrs
-03/30:  1hr
-03/31:  1hr
-04/01:  5hrs
-04/02:  8hrs
-04/03: 16hrs
-Total:~33hrs
+-03/28:  2hrs
+-03/30:  1hr
+-03/31:  1hr
+-04/01:  5hrs
+-04/02:  8hrs
+-04/03: 16hrs
+-Total:~33hrs
 
 
 
