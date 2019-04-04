@@ -1,10 +1,11 @@
 var loadState = {
   preload: function () {
     var loadingLabel = game.add.text(80, 150, "loading...", {font: "30px Courier", fill: "#fff"});
-    game.load.spritesheet("sky", "assets/img/spaceall.png", 800, 600);
-    game.load.image("ground", "assets/img/platform.png");
-    game.load.image("star", "assets/img/star.png");
-		game.load.image("barrier", "assets/img/barrier.png");
+    game.load.spritesheet("sky", "assets/img/spaceall2.png", 800, 600);
+    game.load.image("barihor", "assets/img/barrierhorizontal.png");
+    game.load.image("barivert", "assets/img/barriervertical.png");
+    game.load.image("hyperspacetop", "assets/img/hyperspacetop.png");
+    game.load.image("hyperspacebottom", "assets/img/hyperspacebottom.png");
 		game.load.spritesheet("red", "assets/img/barrier0.png", 25, 120);
 		game.load.spritesheet("orange", "assets/img/barrier1.png", 25, 120);
 		game.load.spritesheet("yellow", "assets/img/barrier2.png", 25, 120);

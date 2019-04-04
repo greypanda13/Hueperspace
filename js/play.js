@@ -22,7 +22,7 @@ class Barrier {
   }
 };
 const barrierKillerX = -40;
-var hyperspaceBounds;
+var spaceBounds;
 // var score = 0;
 var scoreText;
 var healthText;
@@ -32,11 +32,16 @@ const COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
 var currentGamePhase = 0;
 const gamePhaseTitles = ["Open Space", "Hyperspace"];
 var scoreAtPhaseStart = [];
-var ptsBeforePhaseZeroEnd = 13;
+var ptsBeforePhaseZeroEnd = 3;
+var barrierVelocityCoef = 80;
 var isHyperspace = false;
 
 var sky;
 var blur;
+var ivisibarriers;
+var topGuider;
+var bottomGuider;
+var rightSideGuider;
 
 function endGame() {
 
@@ -58,7 +63,7 @@ function switchGamePhases(gamePhase) {
 
 var playState = {
   create: function () {
-    player1Stats.health = 3;
+    player1Stats.health = 30;
     player1Stats.score = 0;
     player1Stats.powerupsAvailable = 0;
     player1Stats.powerupsUsed = 0;
@@ -81,31 +86,28 @@ var playState = {
     sky.animations.add("blur", [1, 2], 2, false);
     sky.animations.add("zoom", [3, 4, 5], 15, true);
 
-    //  The hyperspaceBounds group contains the ground and the 2 ledges we can jump on
-    hyperspaceBounds = game.add.group();
+    //  The spaceBounds group contains the ground and the 2 ledges we can jump on
+    spaceBounds = game.add.group();
 
     ends = game.add.group();
 
-    //  We will enable physics for any object that is created in this group
-    hyperspaceBounds.enableBody = true;
+    spaceBounds.enableBody = true;
 
     ends.enableBody = true;
 
-    // game.add.sprite(0, 0, "barrier");
+    topGuider = spaceBounds.create(0, -26, "barihor");
+    topGuider.body.immovable = true;
+
+    bottomGuider = spaceBounds.create(0, game.world.height + 1, "barihor");
+    bottomGuider.body.immovable = true;
+
+    rightSideGuider = spaceBounds.create(game.world.width + 100, 0, "barivert");
+    rightSideGuider.body.immovable = true;
 
 
-    // NOTE: bring back into the game for hyperspace modec
-    // // Here we create the ground.
-    // var ground = hyperspaceBounds.create(0, game.world.height - 64, "ground");
-    //
-    // //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    // ground.scale.setTo(2, 2);
-    //
-    // //  This stops it from falling away when you jump on it
-    // ground.body.immovable = true;
 
-    ledge = hyperspaceBounds.create(-150, 250, "ground");
-    ledge.body.immovable = true;
+
+
 
     // The player and its settings
     player1 = game.add.sprite(32, game.world.height - 150, "dude");
@@ -149,7 +151,7 @@ var playState = {
     player1.body.velocity.x = 0;
     player1.body.velocity.y = 0;
 
-    game.physics.arcade.collide(stars, hyperspaceBounds);
+    game.physics.arcade.collide(player1, spaceBounds);
 
     game.physics.arcade.overlap(player1, stars, collideStars, null, this);
 
@@ -248,7 +250,7 @@ var playState = {
             var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (GAME_HEIGHT / barriersPerSpawn));
             barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
             barrier.body.gravity.x = -10;
-            barrier.body.velocity.x = -80;
+            barrier.body.velocity.x = -barrierVelocityCoef;
             barrier.animations.add("pass", [1], 200, true);
             // } else if (!isSameColorIn) {
             // add in condition to ensure same color isn't chosen more than once.
@@ -258,7 +260,7 @@ var playState = {
             var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (GAME_HEIGHT / barriersPerSpawn));
             barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
             barrier.body.gravity.x = -10;
-            barrier.body.velocity.x = -80;
+            barrier.body.velocity.x = -barrierVelocityCoef;
             barrier.animations.add("pass", [1], 2000, true);
           }
         }
@@ -270,10 +272,14 @@ var playState = {
       // console.log("currentGamePhase is 1");
       if (isHyperspace) {
         //hyperspace game logic
-
-      } else {
         sky.animations.play("blur").onComplete.add(hyperspaceBegin, this);
         isHyperspace = true;
+      } else {
+        if (false) {
+        } else {
+          rightSideGuider.body.velocity.x = -barrierVelocityCoef * 1.3;
+          isHyperTranStarted = true;
+        }
       }
 
     }
