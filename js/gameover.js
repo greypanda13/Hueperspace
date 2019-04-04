@@ -1,3 +1,5 @@
+var musicGameOver;
+
 var gameoverState = {
   create: function () {
     var nameLabel = game.add.text(80, 80, "GAMEOVER TITLE", {font: "50px Arial", fill: "#fff"});
@@ -8,6 +10,8 @@ var gameoverState = {
   },
 
   start: function () {
+    musicGameOver = game.add.audio("gameover");
+    musicGameOver.play();
     game.state.start("play");
   }
 }

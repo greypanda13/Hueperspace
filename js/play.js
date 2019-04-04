@@ -64,6 +64,7 @@ var ivisibarriers;
 var topGuider;
 var bottomGuider;
 var rightSideGuider;
+var music;
 
 function killBarriers (killer, barriers) {
   barriers.kill();
@@ -100,10 +101,14 @@ function switchGamePhases(gamePhase) {
     barrierBaseVelocity += 20;
   }
 }
+function replayMusic() {
+  music = game.add.audio("playit");
+  music.play();
+}
 
 var playState = {
   create: function () {
-    player1Stats.health = 30;
+    player1Stats.health = 3;
     player1Stats.score = 0;
     player1Stats.powerupsAvailable = 0;
     player1Stats.powerupsUsed = 0;
@@ -111,6 +116,9 @@ var playState = {
       scoreAtPhaseStart[i] = 0;
     };
     currentGamePhase = 0;
+
+    replayMusic();
+    music.onStop.add(replayMusic, this);
 
     this.keyboard = game.input.keyboard;
 
@@ -234,7 +242,6 @@ var playState = {
 
     if (currentGamePhase === 0) {
       if (!isPhaseChangeUnderway) {
-        console.log(isPhaseChangeUnderway);
         // creates barriers every so many frames
         if (frame % barrierSpawnStaggerFrames === 0) {
           console.log("currentGamePhase = " + currentGamePhase);
@@ -323,24 +330,16 @@ var playState = {
 
       // PHASE 1 HAPPENINGS
     } else if (currentGamePhase === 1) {
-      console.log(isPhaseChangeUnderway);
       if (!isPhaseChangeUnderway) {
-        console.log(isPhaseChangeUnderway);
         // creates barriers every so many frames
         if (frame % barrierSpawnStaggerFrames === 0) {
-          console.log("currentGamePhase = " + currentGamePhase);
-          // console.log(scoreAtPhaseStart[currentGamePhase]);
-
           player1Stats.score++;
           scoreText.text = "Score: " + player1Stats.score;
-          // console.log(COLORS[player1Stats.color]);
           var availableColors = COLORS;
           function isNotPlayerColor(value) {
             return value !== COLORS[player1Stats.color];
           }
           var notPlayerColorArr = availableColors.filter(isNotPlayerColor);
-          // console.log(notPlayerColorArr);
-
           var playerColorBarrierIndex = Math.round(Math.random() * (barriersPerSpawn[currentGamePhase] - 1));
           console.log(playerColorBarrierIndex);
           for (var i = 0; i < barriersPerSpawn[currentGamePhase]; i++) {
@@ -352,8 +351,6 @@ var playState = {
               barrier.body.gravity.x = -10;
               barrier.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase);
               barrier.animations.add("pass", [1], 1, true);
-              // } else if (!isSameColorIn) {
-                // add in condition to ensure same color isn't chosen more than once.
 
               } else {
                 var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
@@ -366,7 +363,6 @@ var playState = {
             }
           }
       } else {
-        console.log(isTimeBufferSufficient);
         if (!isTimeBufferSufficient) {
           if (frame % barrierSpawnStaggerFrames === 0) {
             // PASS THIS TEST 5 TIMES TO CLEAR SCREEN...
