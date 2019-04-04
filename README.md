@@ -36,3 +36,34 @@ Time Management:
 04/02:  8hrs
 04/03: 16hrs
 Total:~33hrs
+
+
+
+-----GOALS-----
+MVP:
+1. (X) ship solid color
+2. (X) moves through solid black background
+3. (X) colored barriers approach player side of screen
+{(randomly generated?) array of toPullFrom off-screen to the right}
+{grab toPullFrom[0] out of the array and give it per-frame leftward movement}
+{once they reach off-screen left, add back to toPullFrom array}
+4. (X) running into barriers which are a different color than your ship three times ends the game
+{collision detection for all barriers}
+{if collided barrier is same color as ship, do nothing}
+{if collided barrier is different color, decrease health}
+{if health less than 1, endGame function}
+5. (X) counter for time increments to calculate score
+{add 1pt every second}
+6. (X) score display
+7. (X) game over banner with the session's high score
+{call from endGame(). draw over board}
+
+BONUS:
+1. (X) more than simple background
+2. (X) moving background
+3. ( ) parallax background
+4. (X) include hyperspace mode ― essentially the lightning round at the end of each level/segment. vertically screen-covering barriers approach. top half is player color, bottom half is another. screen graphics become erratic and vertical movement is limited to a slimmer portion
+5. sfx upon hitting player color barrier
+6. ( ) boss battle
+7. ( ) lvl 2 / alt game type
+8. (X) make ship flicker upon collision
