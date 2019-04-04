@@ -21,13 +21,13 @@ class Barrier {
     this.yPos = yPos;
   }
 };
+
+// LOCATION OF BARRIER KILLER (SO GAME DOESN'T KEEP TRACK OF OFF-SCREENS)
 const barrierKillerX = -40;
 var spaceBounds;
-// var score = 0;
 var scoreText;
 var healthText;
 var frame = 0;
-var isFlickerPlaying = false;
 const COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
 var currentGamePhase = 0;
 const gamePhaseTitles = ["Open Space", "Hyperspace"];
@@ -37,18 +37,23 @@ var barriersWaited = 0;
 var barrierBaseVelocity = 80;
 var barrierVelocityPhaseCoef = 3;
 
+var isFlickerPlaying = false;
+
 var isPhaseChangeUnderway = false;
 var isTimeBufferSufficient = false;
 var isHyperTranFinishedX = false;
 var isHyperTranFinishedY = false;
 var isHyperActive = false;
 var isReadyForHyper = false;
+
 var noPhaseChangeRequests = 0;
 var gamePhaseChangeTotal = 0;
-const PLAYER_BASE_SPEED = 250;
+
 // phaseSpeedCoef should be gradually increased at end of round to up speed of player
 var phaseSpeedCoef = 1;
+const PLAYER_BASE_SPEED = 250;
 const DASH_COEF = 1.4;
+
 // < 0 means fewer pts needed in hyperspace than open space; 0 means same pts needed; > 0 means more pts needed.
 var phasePtsCoef = -.5;
 
@@ -59,10 +64,6 @@ var ivisibarriers;
 var topGuider;
 var bottomGuider;
 var rightSideGuider;
-
-function endGame() {
-
-}
 
 function killBarriers (killer, barriers) {
   barriers.kill();
@@ -226,7 +227,6 @@ var playState = {
 
         if (!player1Stats.health) {
           console.log("game is over");
-          endGame();
           game.state.start("gameover");
         }
       }
