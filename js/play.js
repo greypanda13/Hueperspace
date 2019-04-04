@@ -11,7 +11,7 @@ var player1Stats = {
 var overallHighScore;
 var numRandomBarriers = 10;
 const barrierSpawnX = 780;
-const barriersPerSpawn = 5;
+const barriersPerSpawn = [5, 2];
 var barrierSpawnStaggerFrames = 80;
 class Barrier {
   constructor (color, xPos, yPos)
@@ -32,9 +32,10 @@ const COLORS = ["red", "orange", "yellow", "green", "blue", "purple"];
 var currentGamePhase = 0;
 const gamePhaseTitles = ["Open Space", "Hyperspace"];
 var scoreAtPhaseStart = [];
-var ptsBeforePhaseEnd = 3;
+var ptsBeforePhaseEnd = 6;
 var barriersWaited = 0;
-var barrierVelocityCoef = 80;
+var barrierBaseVelocity = 80;
+var barrierVelocityPhaseCoef = 3;
 
 var isPhaseChangeUnderway = false;
 var isTimeBufferSufficient = false;
@@ -68,7 +69,6 @@ function killBarriers (killer, barriers) {
 }
 
 function hyperspaceBegin(sprite, animation) {
-  console.log("play zoom");
   isReadyForHyper = true;
 }
 
@@ -87,8 +87,17 @@ function switchGamePhases(gamePhase) {
   } else {
     currentGamePhase = 0;
   }
+  isHyperTranFinishedX = false;
+  isHyperTranFinishedY = false;
+  isTimeBufferSufficient = false;
+  isPhaseChangeUnderway = false;
+  isHyperActive = false;
+  isReadyForHyper = false;
   gamePhaseChangeTotal++;
   scoreAtPhaseStart[currentGamePhase] = player1Stats.score;
+  if (gamePhaseChangeTotal % gamePhaseTitles.length === 0) {
+    barrierBaseVelocity += 20;
+  }
 }
 
 var playState = {
@@ -104,17 +113,14 @@ var playState = {
 
     this.keyboard = game.input.keyboard;
 
-    console.log();
-  	console.log(player1Stats.health);
-    console.log("hi");
-    console.log("score: " + player1Stats.score);
-    //  We"re going to be using physics, so enable the Arcade Physics system
+    // Enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  A simple background for our game
     sky = game.add.sprite(0, 0, "sky");
     sky.animations.add("blur", [1, 2], 1, false);
     sky.animations.add("zoom", [3, 4, 5], 10, true);
+    sky.animations.add("unblur", [2, 1, 0], 4, false);
 
     //  The spaceBounds group contains the ground and the 2 ledges we can jump on
     spaceBounds = game.add.group();
@@ -131,10 +137,6 @@ var playState = {
 
     barrierKillerObj = killer.create(50, 0, "barivert");
 
-
-
-
-
     topGuider = spaceBounds.create(0, -26, "barihor");
     topGuider.body.immovable = true;
 
@@ -143,11 +145,6 @@ var playState = {
 
     rightSideGuider = spaceBounds.create(game.world.width + 100, 0, "barivert");
     rightSideGuider.body.immovable = true;
-
-
-
-
-
 
     // The player and its settings
     player1 = game.add.sprite(32, game.world.height - 150, "dude");
@@ -168,6 +165,11 @@ var playState = {
     player1.animations.add("lateral5", [31, 32], 4, true);
 
     player1.animations.add("flicker0", [3, 4, 5, 4, 3], 8, false);
+    player1.animations.add("flicker1", [9, 10, 11, 10, 9], 8, false);
+    player1.animations.add("flicker2", [15, 16, 17, 16, 15], 8, false);
+    player1.animations.add("flicker3", [21, 22, 23, 22, 21], 8, false);
+    player1.animations.add("flicker4", [27, 28, 29, 28, 27], 8, false);
+    player1.animations.add("flicker5", [33, 34, 35, 34, 33], 8, false);
 
     player1.animations.add("lateral5", [31, 32], 900, true);
 
@@ -250,24 +252,24 @@ var playState = {
 
           var playerColorBarrierIndex = Math.round(Math.random() * (COLORS.length - (numPlayers + 1)));
           console.log(playerColorBarrierIndex);
-          for (var i = 0; i < barriersPerSpawn; i++) {
+          for (var i = 0; i < barriersPerSpawn[currentGamePhase]; i++) {
 
             if (i === playerColorBarrierIndex) {
               console.log("i " + playerColorBarrierIndex + " color " + COLORS[player1Stats.color]);
-              var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (game.world.height / barriersPerSpawn));
+              var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (game.world.height / barriersPerSpawn[currentGamePhase]));
               barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
               barrier.body.gravity.x = -10;
-              barrier.body.velocity.x = -barrierVelocityCoef;
+              barrier.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase);
               barrier.animations.add("pass", [1], 200, true);
               // } else if (!isSameColorIn) {
                 // add in condition to ensure same color isn't chosen more than once.
 
               } else {
                 var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
-                var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (game.world.height / barriersPerSpawn));
+                var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (game.world.height / barriersPerSpawn[currentGamePhase]));
                 barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
                 barrier.body.gravity.x = -10;
-                barrier.body.velocity.x = -barrierVelocityCoef;
+                barrier.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase);
                 barrier.animations.add("pass", [1], 2000, true);
               }
             }
@@ -279,6 +281,9 @@ var playState = {
             barriersWaited++;
             if (barriersWaited > 4) {
               isTimeBufferSufficient = true;
+            }
+            if (barriersWaited > 0) {
+              rightSideGuider.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase) * 1.3;
             }
           }
         } else {
@@ -293,20 +298,22 @@ var playState = {
               if (isHyperTranFinishedX && isHyperTranFinishedY) {
                 sky.animations.play("blur").onComplete.add(hyperspaceBegin, this);
                 rightSideGuider.kill();
+                rightSideGuider = spaceBounds.create(game.world.width + 100, 0, "barivert");
+                rightSideGuider.body.immovable = true;
               } else {
                 if (topGuider.position.y > 180) {
                   topGuider.body.velocity.y = 0;
                   bottomGuider.body.velocity.y = 0;
                   isHyperTranFinishedY = true;
                 } else {
-                  topGuider.body.velocity.y = barrierVelocityCoef;
-                  bottomGuider.body.velocity.y = -barrierVelocityCoef;
+                  topGuider.body.velocity.y = barrierBaseVelocity;
+                  bottomGuider.body.velocity.y = -barrierBaseVelocity;
                 }
                 if (rightSideGuider.position.x < player1.body.width - rightSideGuider.body.velocity.x) {
                   rightSideGuider.body.velocity.x = 0;
                   isHyperTranFinishedX = true;
                 } else {
-                  rightSideGuider.body.velocity.x = -barrierVelocityCoef * 1.3;
+                  rightSideGuider.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase) * 1.3;
                 }
               }
             }
@@ -314,7 +321,75 @@ var playState = {
         }
       }
     } else if (currentGamePhase === 1) {
+      console.log(isPhaseChangeUnderway);
+      if (!isPhaseChangeUnderway) {
+        console.log(isPhaseChangeUnderway);
+        // creates barriers every so many frames
+        if (frame % barrierSpawnStaggerFrames === 0) {
+          console.log("currentGamePhase = " + currentGamePhase);
+          // console.log(scoreAtPhaseStart[currentGamePhase]);
 
+          player1Stats.score++;
+          scoreText.text = "Score: " + player1Stats.score;
+          // console.log(COLORS[player1Stats.color]);
+          var availableColors = COLORS;
+          function isNotPlayerColor(value) {
+            return value !== COLORS[player1Stats.color];
+          }
+          var notPlayerColorArr = availableColors.filter(isNotPlayerColor);
+          // console.log(notPlayerColorArr);
+
+          var playerColorBarrierIndex = Math.round(Math.random() * (barriersPerSpawn[currentGamePhase] - 1));
+          console.log(playerColorBarrierIndex);
+          for (var i = 0; i < barriersPerSpawn[currentGamePhase]; i++) {
+
+            if (i === playerColorBarrierIndex) {
+              console.log("i " + playerColorBarrierIndex + " color " + COLORS[player1Stats.color]);
+              var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, 180 + i * (game.world.height / barriersPerSpawn[0]));
+              barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
+              barrier.body.gravity.x = -10;
+              barrier.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase);
+              barrier.animations.add("pass", [1], 1, true);
+              // } else if (!isSameColorIn) {
+                // add in condition to ensure same color isn't chosen more than once.
+
+              } else {
+                var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
+                var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, 180 + i * (game.world.height / barriersPerSpawn[0]));
+                barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
+                barrier.body.gravity.x = -10;
+                barrier.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase);
+                barrier.animations.add("pass", [1], 1, true);
+              }
+            }
+          }
+      } else {
+        console.log(isTimeBufferSufficient);
+        if (!isTimeBufferSufficient) {
+          if (frame % barrierSpawnStaggerFrames === 0) {
+            // PASS THIS TEST 5 TIMES TO CLEAR SCREEN...
+            barriersWaited++;
+            if (barriersWaited > 4) {
+              isTimeBufferSufficient = true;
+            }
+          }
+        } else {
+          console.log(isHyperActive);
+          if (isHyperActive) {
+            //hyperspace game logic
+            switchGamePhases(currentGamePhase);
+          } else {
+            sky.animations.play("unblur");
+            isHyperActive = true;
+            topGuider.kill();
+            bottomGuider.kill();
+            topGuider = spaceBounds.create(0, -26, "barihor");
+            topGuider.body.immovable = true;
+            bottomGuider = spaceBounds.create(0, game.world.height + 1, "barihor");
+            bottomGuider.body.immovable = true;
+          }
+        }
+      }
     }
 
 
