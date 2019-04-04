@@ -35,7 +35,13 @@ var scoreAtPhaseStart = [];
 var ptsBeforePhaseZeroEnd = 3;
 var barrierVelocityCoef = 80;
 var isHyperspace = false;
+var isReadyForHyper = false;
+const PLAYER_BASE_SPEED = 250;
+// phaseSpeedCoef should be gradually increased at end of round to up speed of player
+var phaseSpeedCoef = 1;
+const DASH_COEF = 1.4;
 
+var killer;
 var sky;
 var blur;
 var ivisibarriers;
@@ -47,9 +53,13 @@ function endGame() {
 
 }
 
+function killBarriers (killer, barriers) {
+  barriers.kill();
+}
+
 function hyperspaceBegin(sprite, animation) {
   console.log("play zoom");
-  sky.animations.play("zoom");
+  isReadyForHyper = true;
 }
 
 function switchGamePhases(gamePhase) {
@@ -83,17 +93,27 @@ var playState = {
 
     //  A simple background for our game
     sky = game.add.sprite(0, 0, "sky");
-    sky.animations.add("blur", [1, 2], 2, false);
-    sky.animations.add("zoom", [3, 4, 5], 15, true);
+    sky.animations.add("blur", [1, 2], 1, false);
+    sky.animations.add("zoom", [3, 4, 5], 10, true);
 
     //  The spaceBounds group contains the ground and the 2 ledges we can jump on
     spaceBounds = game.add.group();
 
     ends = game.add.group();
 
+    killer = game.add.group();
+
     spaceBounds.enableBody = true;
 
     ends.enableBody = true;
+
+    killer.enableBody = true;
+
+    barrierKillerObj = killer.create(50, 0, "barivert");
+
+
+
+
 
     topGuider = spaceBounds.create(0, -26, "barihor");
     topGuider.body.immovable = true;
@@ -144,8 +164,10 @@ var playState = {
 
     barriers.enableBody = true;
 
-      scoreText = game.add.text(150, 16, "score: " + player1Stats.score, { fontSize: "32px", fill: "#fff" });
-      healthText = game.add.text(16, 16, "health: " + player1Stats.health, { fontSize: "32px", fill: "#fff" });
+    game.physics.arcade.overlap(killer, barriers, killBarriers, null, this);
+
+      scoreText = game.add.text(180, 8, "score: " + player1Stats.score, { font: "20px Courier", fill: "#fff" });
+      healthText = game.add.text(8, 8, "health: " + player1Stats.health, { font: "20px Courier", fill: "#fff" });
   },
   update: function () {
     player1.body.velocity.x = 0;
@@ -154,6 +176,8 @@ var playState = {
     game.physics.arcade.collide(player1, spaceBounds);
 
     game.physics.arcade.overlap(player1, stars, collideStars, null, this);
+
+
 
     function collideStars (player1, star) {
 
@@ -187,44 +211,7 @@ var playState = {
     }
 
     if (currentGamePhase === 0) {
-      if (cursors.left.isDown) {
-        //  Move to the left
-        if (keyDash.isDown) {
-          player1.body.velocity.x = -350;
-        } else {
-          player1.body.velocity.x = -250;
-        }
-        if (!isFlickerPlaying) {
-          player1.animations.play("lateral" + player1Stats.color);
-        }
-      } else if (cursors.right.isDown) {
-        //  Move to the right
-        if (keyDash.isDown) {
-          player1.body.velocity.x = 350;
-        } else {
-          player1.body.velocity.x = 250;
-        }
-        if (!isFlickerPlaying) {
-          player1.animations.play("lateral" + player1Stats.color);
-        }
-      } else {
-        //  Stay still
-        player1.frame = 0 + player1Stats.color * 6;
-      }
 
-      if (cursors.up.isDown) {
-        if (keyDash.isDown) {
-          player1.body.velocity.y = -350;
-        } else {
-          player1.body.velocity.y = -250;
-        }
-      } else if (cursors.down.isDown) {
-        if (keyDash.isDown) {
-          player1.body.velocity.y = 350;
-        } else {
-          player1.body.velocity.y = 250;
-        }
-      }
 
       // creates barriers every so many frames
       if (frame % barrierSpawnStaggerFrames === 0) {
@@ -247,7 +234,7 @@ var playState = {
 
           if (i === playerColorBarrierIndex) {
             console.log("i " + playerColorBarrierIndex + " color " + COLORS[player1Stats.color]);
-            var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (GAME_HEIGHT / barriersPerSpawn));
+            var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (game.world.height / barriersPerSpawn));
             barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
             barrier.body.gravity.x = -10;
             barrier.body.velocity.x = -barrierVelocityCoef;
@@ -257,7 +244,7 @@ var playState = {
 
           } else {
             var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
-            var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (GAME_HEIGHT / barriersPerSpawn));
+            var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (game.world.height / barriersPerSpawn));
             barrier = barriers.create(barrier.xPos, barrier.yPos, barrier.color);
             barrier.body.gravity.x = -10;
             barrier.body.velocity.x = -barrierVelocityCoef;
@@ -269,19 +256,62 @@ var playState = {
 
       }
     } else if (currentGamePhase === 1) {
-      // console.log("currentGamePhase is 1");
-      if (isHyperspace) {
-        //hyperspace game logic
-        sky.animations.play("blur").onComplete.add(hyperspaceBegin, this);
-        isHyperspace = true;
+      if (isReadyForHyper) {
+        sky.animations.play("zoom");
+
       } else {
-        if (false) {
+        // console.log("currentGamePhase is 1");
+        if (isHyperspace) {
+          //hyperspace game logic
+          sky.animations.play("blur").onComplete.add(hyperspaceBegin, this);
         } else {
-          rightSideGuider.body.velocity.x = -barrierVelocityCoef * 1.3;
-          isHyperTranStarted = true;
+          if (rightSideGuider.position.x < player1.body.width - rightSideGuider.body.velocity.x) {
+            rightSideGuider.body.velocity.x = 0;
+            isHyperspace = true;
+          } else {
+            rightSideGuider.body.velocity.x = -barrierVelocityCoef * 1.3;
+            isHyperTranStarted = true;
+          }
         }
       }
+    }
+    if (cursors.left.isDown) {
+      //  Move to the left
+      if (keyDash.isDown) {
+        player1.body.velocity.x = -PLAYER_BASE_SPEED * DASH_COEF * (1 + currentGamePhase * phaseSpeedCoef);
+      } else {
+        player1.body.velocity.x = -PLAYER_BASE_SPEED * (1 + currentGamePhase * phaseSpeedCoef);
+      }
+      if (!isFlickerPlaying) {
+        player1.animations.play("lateral" + player1Stats.color);
+      }
+    } else if (cursors.right.isDown) {
+      //  Move to the right
+      if (keyDash.isDown) {
+        player1.body.velocity.x = PLAYER_BASE_SPEED * DASH_COEF * ((1 + (currentGamePhase * -.5)) * phaseSpeedCoef);
+      } else {
+        player1.body.velocity.x = PLAYER_BASE_SPEED * ((1 + (currentGamePhase * -.5)) * phaseSpeedCoef);
+      }
+      if (!isFlickerPlaying) {
+        player1.animations.play("lateral" + player1Stats.color);
+      }
+    } else {
+      //  Stay still
+      player1.frame = 0 + player1Stats.color * 6;
+    }
 
+    if (cursors.up.isDown) {
+      if (keyDash.isDown) {
+        player1.body.velocity.y = -PLAYER_BASE_SPEED * DASH_COEF * (1 + currentGamePhase * phaseSpeedCoef);
+      } else {
+        player1.body.velocity.y = -PLAYER_BASE_SPEED * (1 + currentGamePhase * phaseSpeedCoef);
+      }
+    } else if (cursors.down.isDown) {
+      if (keyDash.isDown) {
+        player1.body.velocity.y = PLAYER_BASE_SPEED * DASH_COEF * (1 + currentGamePhase * phaseSpeedCoef);
+      } else {
+        player1.body.velocity.y = PLAYER_BASE_SPEED * (1 + currentGamePhase * phaseSpeedCoef);
+      }
     }
     frame++;
     if ((player1Stats.score - scoreAtPhaseStart[currentGamePhase]) >= ptsBeforePhaseZeroEnd) {
