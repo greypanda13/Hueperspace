@@ -369,7 +369,7 @@ var playState = {
           if (frame % barrierSpawnStaggerFrames === 0) {
             // PASS THIS TEST 5 TIMES TO CLEAR SCREEN...
             barriersWaited++;
-            if (barriersWaited > 4) {
+            if (barriersWaited > 8) {
               isTimeBufferSufficient = true;
             }
           }
