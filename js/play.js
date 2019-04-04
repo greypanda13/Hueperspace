@@ -248,12 +248,13 @@ var playState = {
             return value !== COLORS[player1Stats.color];
           }
           var notPlayerColorArr = availableColors.filter(isNotPlayerColor);
-          // console.log(notPlayerColorArr);
 
+          // RANDOMLY CHOOSE ORDER (INDEX) OF PLAYER COLOR BARRIER
           var playerColorBarrierIndex = Math.round(Math.random() * (COLORS.length - (numPlayers + 1)));
           console.log(playerColorBarrierIndex);
           for (var i = 0; i < barriersPerSpawn[currentGamePhase]; i++) {
 
+            // ASSIGN PLAYER COLOR TO BARRIER WHEN i REACHES PREDETERMINED PLAYER COLOR INDEX #
             if (i === playerColorBarrierIndex) {
               console.log("i " + playerColorBarrierIndex + " color " + COLORS[player1Stats.color]);
               var barrier = new Barrier(COLORS[player1Stats.color], barrierSpawnX, i * (game.world.height / barriersPerSpawn[currentGamePhase]));
@@ -261,9 +262,8 @@ var playState = {
               barrier.body.gravity.x = -10;
               barrier.body.velocity.x = -barrierBaseVelocity * (1 + barrierVelocityPhaseCoef * currentGamePhase);
               barrier.animations.add("pass", [1], 200, true);
-              // } else if (!isSameColorIn) {
-                // add in condition to ensure same color isn't chosen more than once.
 
+              // RANDOMIZE COLOR FOR ALL OTHER INDECES' BARRIERS
               } else {
                 var n = Math.round(Math.random() * (notPlayerColorArr.length - 1));
                 var barrier = new Barrier(notPlayerColorArr[n], barrierSpawnX, i * (game.world.height / barriersPerSpawn[currentGamePhase]));
@@ -320,6 +320,8 @@ var playState = {
           }
         }
       }
+
+      // PHASE 1 HAPPENINGS
     } else if (currentGamePhase === 1) {
       console.log(isPhaseChangeUnderway);
       if (!isPhaseChangeUnderway) {
@@ -392,7 +394,6 @@ var playState = {
       }
     }
 
-
     // PLAYER CONTROLS
     if (cursors.left.isDown) {
       //  Move to the left
@@ -430,16 +431,12 @@ var playState = {
       }
     }
 
-
     // TRIGGER FOR GAME PHASE CHANGE
     frame++;
     if ((player1Stats.score - scoreAtPhaseStart[currentGamePhase]) >= ptsBeforePhaseEnd * (1 + phasePtsCoef * currentGamePhase)) {
       if (gamePhaseChangeTotal === noPhaseChangeRequests) {
-        console.log("switch!");
         triggerPhaseChange();
       }
     }
-
-
   }
 }
