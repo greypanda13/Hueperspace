@@ -13,6 +13,9 @@ var loadState = {
 		game.load.spritesheet("blue", "assets/img/barrier4.png", 25, 120);
 		game.load.spritesheet("purple", "assets/img/barrier5.png", 25, 120);
     game.load.spritesheet("dude", "assets/img/playerspritesall.png", 59, 29);
+    game.load.audio('menu', 'assets/audio/weirdloop.wav');
+    game.load.audio('menu', 'assets/audio/dashrunner.wav');
+    game.load.audio('menu', 'assets/audio/arcadefunk.mp3');
   },
 
   create: function () {
